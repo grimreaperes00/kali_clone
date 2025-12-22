@@ -14,7 +14,7 @@ import requests
 import openai
 from pathlib import Path
 
-TEMPLATE_ID = 9000  # 固定的黃金映像 VM ID
+TEMPLATE_ID = 9009  # 固定的黃金映像 VM ID
 
 # ========== 檢查 unar ==========
 def ensure_unar_available():

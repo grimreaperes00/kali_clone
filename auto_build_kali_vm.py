@@ -153,9 +153,7 @@ def create_template(args, version):
 def deploy_vm(args, vm_name, index=None):
     vm_id = find_available_vm_id(100)
     desc = args.description if index is None else f"{args.description} #{index+1}"
-    net = f"model=virtio,firewall=0,bridge={args.bridge}"
-    if args.vlan:
-        net += f",tag={args.vlan}"
+    net = f"model=virtio,firewall=0,bridge={args.bridge},tag={args.vlan}"
 
     subprocess.run(["qm", "clone", str(TEMPLATE_ID), str(vm_id), "--name", vm_name], check=True)
     subprocess.run(["qm", "set", str(vm_id),
@@ -188,8 +186,8 @@ if __name__ == "__main__":
     parser.add_argument("--min-mem", type=int, default=4096)
     parser.add_argument("--max-mem", type=int, default=8192)
     parser.add_argument("--cpu", type=int, default=4)
-    parser.add_argument("--bridge", default="vmbr0")
-    parser.add_argument("--vlan", type=str)
+    parser.add_argument("--bridge", default="vmbr3")
+    parser.add_argument("--vlan", type=str, default="100")
     parser.add_argument("--resize", default="+0G", help="磁碟大小調整值，例如 +10G 或 +0G 表示不變更")
     parser.add_argument("--storage", default="local-lvm")
     parser.add_argument("--workdir", default="/var/lib/vz/template/iso/kali-images")
