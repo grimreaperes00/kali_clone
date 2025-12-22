@@ -38,18 +38,43 @@ def get_latest_kali_url(base_url: str):
 def id_in_use(vm_id: int) -> bool:
     vm_conf = Path(f"/etc/pve/qemu-server/{vm_id}.conf")
     ct_conf = Path(f"/etc/pve/lxc/{vm_id}.conf")
-    return (
-        subprocess.run(["qm", "status", str(vm_id)], stdout=subprocess.DEVNULL).returncode == 0 or
-        subprocess.run(["pct", "status", str(vm_id)], stdout=subprocess.DEVNULL).returncode == 0 or
-        vm_conf.exists() or
-        ct_conf.exists()
-    )
+    # 只要 VM 或 CT 任一存在、任一 status 成功都算占用
+    vm_busy = subprocess.run(["qm", "status", str(vm_id)], stdout=subprocess.DEVNULL).returncode == 0
+    ct_busy = subprocess.run(["pct", "status", str(vm_id)], stdout=subprocess.DEVNULL).returncode == 0
+    vm_file = vm_conf.exists()
+    ct_file = ct_conf.exists()
+    return vm_busy or ct_busy or vm_file or ct_file
 
 # 找出尚未使用的 VM ID
-def find_available_vm_id(start: int = 100):
-    while id_in_use(start):
-        start += 1
-    return start
+def find_available_vm_id(start_vmid=100):
+    used_vmids = set()
+    try:
+        qm_out = subprocess.check_output('qm list', shell=True, text=True)
+        for line in qm_out.splitlines()[1:]:
+            m = re.match(r'\s*(\d+)', line)
+            if m: used_vmids.add(int(m.group(1)))
+    except Exception: pass
+
+    try:
+        pct_out = subprocess.check_output('pct list', shell=True, text=True)
+        for line in pct_out.splitlines()[1:]:
+            m = re.match(r'\s*(\d+)', line)
+            if m: used_vmids.add(int(m.group(1)))
+    except Exception: pass
+
+    from glob import glob
+    for conf_path in glob('/etc/pve/nodes/*/qemu-server/*.conf'):
+        try: used_vmids.add(int(Path(conf_path).stem))
+        except: pass
+
+    for conf_path in glob('/etc/pve/nodes/*/lxc/*.conf'):
+        try: used_vmids.add(int(Path(conf_path).stem))
+        except: pass
+
+    vmid = start_vmid
+    while vmid in used_vmids:
+        vmid += 1
+    return vmid
 
 # 從 qm config 解析磁碟容量大小
 def get_disk_size_gb(vm_id: int, storage: str) -> str:
