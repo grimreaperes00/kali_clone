@@ -230,7 +230,7 @@ if __name__ == "__main__":
     # 若模板不存在或版本改變，則重新建立
     if not template_conf.exists() or not qcow2file or version_changed:
         print(f"[INFO] 偵測到以下情況需建立黃金映像：")
-        if not template_conf.exists(): print("  - VM 9000 不存在")
+        if not template_conf.exists(): print(f"  - VM {TEMPLATE_ID} 不存在")
         if not qcow2file: print("  - 缺少 qcow2 映像")
         if version_changed: print(f"  - 發現新版 Kali：{version}")
         create_template(args, version)
