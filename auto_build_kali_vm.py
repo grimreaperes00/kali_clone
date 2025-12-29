@@ -209,6 +209,7 @@ def deploy_vm(args, vm_name, index):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="建立 Kali Template 並快速複製多台 VM")
     parser.add_argument("--description", default="Kali VM auto-generated")
+    parser.add_argument('--strict-id', action='store_true', help="啟用嚴格 ID 模式 (配合 n8n 使用)")
     
     # === Template 戰略參數 ===
     parser.add_argument('--template-id', type=int, default=9000)
